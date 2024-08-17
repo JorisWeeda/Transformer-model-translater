@@ -1,0 +1,13 @@
+batch_size: 8
+num_epochs: 20
+lr: 0.0001
+sequence_length: 350
+d_model: 512
+source_language: "en"
+target_language: "nl"
+model_folder: "weights"
+model_basename: "tmodel_"
+preload: null
+tokenizer_file: "tokenizer_{0}.json"
+experiment_name: "runs/tmodel"
+label_smoothing: 0.1
