@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "transformer-model-translater"
+version = "1.0.0"
+description = "Python-based application that utilizes transformer models to perform text translation between different languages. Built for flexibility, it leverages state-of-the-art natural language processing (NLP) techniques and allows for easy integration with various transformer-based architectures like BERT, GPT, or T5. With Poetry as the dependency manager, the project ensures smooth package management and consistent environment setup."
+authors = ["Your Name <you@example.com>"]
+license = "Apache License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+torch = "^2.4.1"
+torchvision = "^0.19.1"
+torchaudio = "^2.4.1"
+torchtext = "^0.18.0"
+datasets = "^3.0.1"
+tokenizers = "^0.20.0"
+torchmetrics = "^1.4.2"
+tensorboard = "^2.18.0"
+altair = "^5.4.1"
+wandb = "^0.18.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
