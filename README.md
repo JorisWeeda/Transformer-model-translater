@@ -6,8 +6,6 @@
 
 - Transformer-based language translation
 - Configurable language pairs and hyperparameters
-- Flexible model integration (support for Hugging Face, etc.)
-- Scalable for different languages and tasks
 - Easy dependency management with Poetry
 
 ## Requirements
