@@ -1,9 +1,8 @@
+import torch
+import yaml
 
 from src.training import train_model
 
-
-import yaml
-from pathlib import Path
 
 def load_config(config_path='resources/config.yaml'):
     """Load configuration from a YAML file."""
@@ -13,5 +12,7 @@ def load_config(config_path='resources/config.yaml'):
 
 
 if __name__ == '__main__':
+    torch.cuda.empty_cache()
+
     config = load_config()
     train_model(config)

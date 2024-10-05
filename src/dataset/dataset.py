@@ -1,8 +1,11 @@
 import torch
 from torch.utils.data import Dataset
 
+
 class BiLingualData(Dataset):
     """Dataset class for bilingual text translation with tokenization and padding."""
+
+    DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def __init__(self, dataset, source_tokenizer, target_tokenizer, source_language, target_language, sequence_length):
         """Initializes the dataset with tokenizers and sequence length."""
@@ -14,9 +17,9 @@ class BiLingualData(Dataset):
         self.source_language = source_language
         self.target_language = target_language
 
-        self.sos_token = torch.tensor([source_tokenizer.token_to_id('[SOS]')], dtype=torch.int64)
-        self.eos_token = torch.tensor([source_tokenizer.token_to_id('[EOS]')], dtype=torch.int64)
-        self.pad_token = torch.tensor([source_tokenizer.token_to_id('[PAD]')], dtype=torch.int64)
+        self.sos_token = torch.tensor([source_tokenizer.token_to_id('[SOS]')], dtype=torch.int64, device=self.DEVICE)
+        self.eos_token = torch.tensor([source_tokenizer.token_to_id('[EOS]')], dtype=torch.int64, device=self.DEVICE)
+        self.pad_token = torch.tensor([source_tokenizer.token_to_id('[PAD]')], dtype=torch.int64, device=self.DEVICE)
 
         self.sequence_length = sequence_length
 
@@ -45,30 +48,20 @@ class BiLingualData(Dataset):
         if encoder_num_padding_tokens < 0 or decoder_num_padding_tokens < 0:
             raise ValueError('Given sentence is too long to process.')
 
-        encoder_input = torch.cat([
-            self.sos_token,
-            torch.tensor(encoder_input_tokens, dtype=torch.int64),
-            self.eos_token,
-            torch.tensor([self.pad_token] * encoder_num_padding_tokens, dtype=torch.int64)
-        ], dim=0)
+        encoder_input = torch.cat([self.sos_token, torch.tensor(encoder_input_tokens, dtype=torch.int64, device=self.DEVICE),
+                                   self.eos_token, torch.tensor([self.pad_token] * encoder_num_padding_tokens, dtype=torch.int64, device=self.DEVICE)], dim=0)
 
-        decoder_input = torch.cat([
-            self.sos_token,
-            torch.tensor(decoder_input_tokens, dtype=torch.int64),
-            torch.tensor([self.pad_token] * decoder_num_padding_tokens, dtype=torch.int64)
-        ], dim=0)
+        decoder_input = torch.cat([self.sos_token, torch.tensor(decoder_input_tokens, dtype=torch.int64, device=self.DEVICE),
+                                   torch.tensor([self.pad_token] * decoder_num_padding_tokens, dtype=torch.int64, device=self.DEVICE)], dim=0)
 
-        label = torch.cat([
-            torch.tensor(decoder_input_tokens, dtype=torch.int64),
-            self.eos_token,
-            torch.tensor([self.pad_token] * decoder_num_padding_tokens, dtype=torch.int64)
-        ], dim=0)
+        label = torch.cat([torch.tensor(decoder_input_tokens, dtype=torch.int64, device=self.DEVICE),
+                           self.eos_token, torch.tensor([self.pad_token] * decoder_num_padding_tokens, dtype=torch.int64, device=self.DEVICE)], dim=0)
 
         assert encoder_input.shape[0] == self.sequence_length
         assert decoder_input.shape[0] == self.sequence_length
         assert label.shape[0] == self.sequence_length
 
-        causal_mask = self.causal_mask(decoder_input.size(0))
+        causal_mask = self.causal_mask(decoder_input.size(0)).to(self.DEVICE)
         
         encoder_mask = (encoder_input != self.pad_token).unsqueeze(0).unsqueeze(0)
         decoder_mask = (decoder_input != self.pad_token).unsqueeze(0).unsqueeze(0) & causal_mask

@@ -4,6 +4,8 @@ import torch.nn as nn
 class MultiheadAttention(nn.Module):
     """Implements the Multihead Attention mechanism used in Transformers."""
     
+    DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     MASK_VALUE = -1e9
 
     def __init__(self, d_model, h, dropout):
@@ -17,10 +19,10 @@ class MultiheadAttention(nn.Module):
 
         self.d_k = d_model // h
 
-        self.w_q = nn.Linear(d_model, d_model)
-        self.w_k = nn.Linear(d_model, d_model)
-        self.w_v = nn.Linear(d_model, d_model)
-        self.w_o = nn.Linear(d_model, d_model)
+        self.w_q = nn.Linear(d_model, d_model, device=self.DEVICE)
+        self.w_k = nn.Linear(d_model, d_model, device=self.DEVICE)
+        self.w_v = nn.Linear(d_model, d_model, device=self.DEVICE)
+        self.w_o = nn.Linear(d_model, d_model, device=self.DEVICE)
 
         self.dropout = nn.Dropout(dropout)
         self.attention_scores = None
@@ -39,7 +41,7 @@ class MultiheadAttention(nn.Module):
         key = key.view(key.size(0), key.size(1), self.h, self.d_k).transpose(1, 2)
         value = value.view(value.size(0), value.size(1), self.h, self.d_k).transpose(1, 2)
 
-        x, attention_scores = self._attention(query, key, value, mask)
+        x, attention_scores = self._attention(query, key, value, mask, device=self.DEVICE)
         
         x = x.transpose(1, 2).contiguous().view(x.size(0), -1, self.d_model)
         self.attention_scores = attention_scores
@@ -47,10 +49,10 @@ class MultiheadAttention(nn.Module):
         return self.w_o(x)
 
     @staticmethod
-    def _attention(query, key, value, mask, dropout=None):
+    def _attention(query, key, value, mask, dropout=None, device='cpu'):
         """Computes the scaled dot-product attention."""
         d_k = query.size(-1)
-        attention_scores = (query @ key.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))
+        attention_scores = (query @ key.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32, device=device))
 
         if mask is not None:
             attention_scores = attention_scores.masked_fill(mask == 0, MultiheadAttention.MASK_VALUE)
